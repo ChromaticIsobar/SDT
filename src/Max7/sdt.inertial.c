@@ -40,6 +40,12 @@ void *inertial_new(t_symbol *s, long argc, t_atom *argv) {
   x->key = key;
   x->mass = 1.0;
   x->fragmentSize = 1.0;
+  SDTResonator_setFrequency(x->inertial, 0, 0.0);
+  SDTResonator_setDecay(x->inertial, 0, 0.0);
+  SDTResonator_setWeight(x->inertial, 0, x->mass);
+  SDTResonator_setGain(x->inertial, 0, 0, 1.0);
+  SDTResonator_setFragmentSize(x->inertial, x->fragmentSize);
+  SDTResonator_setActiveModes(x->inertial, 1);
   attr_args_process(x, argc, argv);
   return x;
 }
@@ -74,23 +80,11 @@ void inertial_strike(t_inertial *x, double p, double v) {
 
 void inertial_dsp(t_inertial *x, t_signal **sp, short *count) {
   SDT_setSampleRate(sp[0]->s_sr);
-  SDTResonator_setFrequency(x->inertial, 0, 0.0);
-  SDTResonator_setDecay(x->inertial, 0, 0.0);
-  SDTResonator_setWeight(x->inertial, 0, x->mass);
-  SDTResonator_setGain(x->inertial, 0, 0, 1.0);
-  SDTResonator_setFragmentSize(x->inertial, x->fragmentSize);
-  SDTResonator_setActiveModes(x->inertial, 1);
 }
 
 void inertial_dsp64(t_inertial *x, t_object *dsp64, short *count, double samplerate,
                     long maxvectorsize, long flags) {
   SDT_setSampleRate(samplerate);
-  SDTResonator_setFrequency(x->inertial, 0, 0.0);
-  SDTResonator_setDecay(x->inertial, 0, 0.0);
-  SDTResonator_setWeight(x->inertial, 0, x->mass);
-  SDTResonator_setGain(x->inertial, 0, 0, 1.0);
-  SDTResonator_setFragmentSize(x->inertial, x->fragmentSize);
-  SDTResonator_setActiveModes(x->inertial, 1);
 }
 
 void C74_EXPORT ext_main(void *r) {	

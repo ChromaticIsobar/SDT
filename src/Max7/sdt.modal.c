@@ -10,7 +10,7 @@ typedef struct _modal {
   SDTResonator *modal;
   char *key;
   t_object *pickups[SDT_MAX_PICKUPS];
-  double freqs[SDT_MAX_MODES], decays[SDT_MAX_MODES], gains[SDT_MAX_PICKUPS][SDT_MAX_MODES], fragmentSize;
+  double *freqs, decays[SDT_MAX_MODES], gains[SDT_MAX_PICKUPS][SDT_MAX_MODES], fragmentSize;
   long nModes, activeModes, nPickups;
 } t_modal;
 
@@ -89,18 +89,35 @@ void modal_assist(t_modal *x, void *b, long m, long a, char *s) {
   } 
 }
 
-void modal_freqs(t_modal *x, void *attr, long ac, t_atom *av) {
-  int mode;
-    
-  for (mode = 0; mode < ac; mode++) {
-    x->freqs[mode] = atom_getfloat(av + mode);
-    SDTResonator_setFrequency(x->modal, mode, x->freqs[mode]);
+t_max_err modal_freqs_get(t_modal *x, void *attr, long *ac, t_atom **av)
+{
+  int nModes = SDTResonator_getNModes(x->modal);
+  if ((*ac < nModes) || (*av == 0))
+  {
+    *ac = nModes;
+    if (!(*av = (t_atom *) getbytes(sizeof(t_atom)*(*ac))))
+    {
+      *ac = 0;
+      return MAX_ERR_OUT_OF_MEM;
+    }
+    for (unsigned int mode = 0; mode < nModes ; ++mode)
+      atom_setfloat((*av) + mode, SDTResonator_getFrequency(x->modal, mode));
+  }
+  return MAX_ERR_NONE;
+}
+
+void modal_freqs_set(t_modal *x, void *attr, long ac, t_atom *av) {
+  if (ac > SDTResonator_getNModes(x->modal)) {
+    ac = SDTResonator_getNModes(x->modal);
+  }
+  for (unsigned  int mode = 0; mode < ac; mode++) {
+    SDTResonator_setFrequency(x->modal, mode, atom_getfloat(av + mode));
   }
 }
 
 void modal_decays(t_modal *x, void *attr, long ac, t_atom *av) {
   int mode;
-    
+
   for (mode = 0; mode < ac; mode++) {
     x->decays[mode] = atom_getfloat(av + mode);
     SDTResonator_setDecay(x->modal, mode, x->decays[mode]);
@@ -128,36 +145,12 @@ void modal_pickups(t_modal *x, void *attr, long ac, t_atom *av) {
 }
 
 void modal_dsp(t_modal *x, t_signal **sp, short *count) {
-  int pickup, mode;
-  
   SDT_setSampleRate(sp[0]->s_sr);
-  for (mode = 0; mode < x->nModes; mode++) {
-    SDTResonator_setFrequency(x->modal, mode, x->freqs[mode]);
-    SDTResonator_setDecay(x->modal, mode, x->decays[mode]);
-    SDTResonator_setWeight(x->modal, mode, 1.0);
-    for (pickup = 0; pickup < x->nPickups; pickup++) {
-      SDTResonator_setGain(x->modal, pickup, mode, x->gains[pickup][mode]);
-    }
-  }
-  SDTResonator_setFragmentSize(x->modal, x->fragmentSize);
-  SDTResonator_setActiveModes(x->modal, x->activeModes);
 }
 
 void modal_dsp64(t_modal *x, t_object *dsp64, short *count, double samplerate,
                   long maxvectorsize, long flags) {
-  int pickup, mode;
-  
   SDT_setSampleRate(samplerate);
-  for (mode = 0; mode < x->nModes; mode++) {
-    SDTResonator_setFrequency(x->modal, mode, x->freqs[mode]);
-    SDTResonator_setDecay(x->modal, mode, x->decays[mode]);
-    SDTResonator_setWeight(x->modal, mode, 1.0);
-    for (pickup = 0; pickup < x->nPickups; pickup++) {
-      SDTResonator_setGain(x->modal, pickup, mode, x->gains[pickup][mode]);
-    }
-  }
-  SDTResonator_setFragmentSize(x->modal, x->fragmentSize);
-  SDTResonator_setActiveModes(x->modal, x->activeModes);
 }
 
 void C74_EXPORT ext_main(void *r) {	
@@ -177,8 +170,8 @@ void C74_EXPORT ext_main(void *r) {
   CLASS_ATTR_FILTER_MIN(c, "freqs", 0.0);
   CLASS_ATTR_FILTER_MIN(c, "decays", 0.0);
   CLASS_ATTR_FILTER_CLIP(c, "fragmentSize", 0.0, 1.0);
-  
-  CLASS_ATTR_ACCESSORS(c, "freqs", NULL, (method)modal_freqs);
+
+  CLASS_ATTR_ACCESSORS(c, "freqs", (method)modal_freqs_get, (method)modal_freqs_set);
   CLASS_ATTR_ACCESSORS(c, "decays", NULL, (method)modal_decays);
   CLASS_ATTR_ACCESSORS(c, "fragmentSize", NULL, (method)modal_fragmentSize);
   CLASS_ATTR_ACCESSORS(c, "activeModes", NULL, (method)modal_activeModes);
