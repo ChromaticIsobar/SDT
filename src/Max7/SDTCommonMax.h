@@ -38,4 +38,29 @@ The t_class pointer should be a variable "c"
 CLASS_ATTR_ACCESSORS(c, "key", NULL, (method) M ## _key); \
 CLASS_ATTR_ORDER(c, "key", 0, I);
 
+/** @brief Make getter and setter for specified attribute
+@param[in] C The Max type (without the leading "t_")
+@param[in] F The Max attribute name
+@param[in] SDT_F The SDT field
+@param[in] SDT_T The SDT type (without the leading "SDT")
+@param[in] T The type of the Max attribute
+@param[in] INNER The inner SDT object */
+#define MAKE_ACCESSORS(C, F, SDT_F, SDT_T, T, INNER) \
+t_max_err C ## _ ## F ## _set(t_ ## C *x, void *attr, long ac, t_atom *av) { \
+  if (ac && av) \
+    SDT ## SDT_T ## _set ## SDT_F (x-> INNER, atom_get ## T (av)); \
+  return MAX_ERR_NONE; \
+} \
+t_max_err C ## _ ## F ## _get(t_ ## C *x, void *attr, long *ac, t_atom **av) { \
+  if ((*ac == 0) || (*av == 0)) { \
+    *ac = 1; \
+    if (!(*av = (t_atom *) getbytes(sizeof(t_atom)*(*ac)))) { \
+      *ac = 0; \
+      return MAX_ERR_OUT_OF_MEM; \
+    } \
+  } \
+  atom_set ## T (*av, SDT ## SDT_T ## _get ## SDT_F (x-> INNER)); \
+  return MAX_ERR_NONE; \
+}
+
 #endif

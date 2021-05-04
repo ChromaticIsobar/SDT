@@ -1,6 +1,7 @@
 #include "ext.h"
 #include "ext_obex.h"
 #include "z_dsp.h"
+#include "SDTCommonMax.h"
 #include "SDT/SDTCommon.h"
 #include "SDT/SDTSolids.h"
 #include "SDT_fileusage/SDT_fileusage.h"
@@ -124,16 +125,6 @@ void modal_decays(t_modal *x, void *attr, long ac, t_atom *av) {
   }
 }
 
-void modal_fragmentSize(t_modal *x, void *attr, long ac, t_atom *av) {
-  x->fragmentSize = atom_getfloat(av);
-  SDTResonator_setFragmentSize(x->modal, x->fragmentSize);
-}
-
-void modal_activeModes(t_modal *x, void *attr, long ac, t_atom *av) {
-  x->activeModes = SDT_clip(atom_getlong(av), 0, x->nModes);
-  SDTResonator_setActiveModes(x->modal, x->activeModes);
-}
-
 void modal_pickups(t_modal *x, void *attr, long ac, t_atom *av) {
   int pickup, mode;
   
@@ -143,6 +134,9 @@ void modal_pickups(t_modal *x, void *attr, long ac, t_atom *av) {
     SDTResonator_setGain(x->modal, pickup, mode, x->gains[pickup][mode]);
   }
 }
+
+MAKE_ACCESSORS(modal, fragmentSize, FragmentSize, Resonator, float, modal)
+MAKE_ACCESSORS(modal, activeModes, ActiveModes, Resonator, long, modal)
 
 void modal_dsp(t_modal *x, t_signal **sp, short *count) {
   SDT_setSampleRate(sp[0]->s_sr);
@@ -173,8 +167,8 @@ void C74_EXPORT ext_main(void *r) {
 
   CLASS_ATTR_ACCESSORS(c, "freqs", (method)modal_freqs_get, (method)modal_freqs_set);
   CLASS_ATTR_ACCESSORS(c, "decays", NULL, (method)modal_decays);
-  CLASS_ATTR_ACCESSORS(c, "fragmentSize", NULL, (method)modal_fragmentSize);
-  CLASS_ATTR_ACCESSORS(c, "activeModes", NULL, (method)modal_activeModes);
+  CLASS_ATTR_ACCESSORS(c, "fragmentSize", (method)modal_fragmentSize_get, (method)modal_fragmentSize_set);
+  CLASS_ATTR_ACCESSORS(c, "activeModes", (method)modal_activeModes_get, (method)modal_activeModes_set);
   
   CLASS_ATTR_ORDER(c, "freqs", 0, "1");
   CLASS_ATTR_ORDER(c, "decays", 0, "2");
