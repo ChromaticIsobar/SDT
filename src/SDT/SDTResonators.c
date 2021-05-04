@@ -268,9 +268,10 @@ double SDTResonator_getPosition(const SDTResonator *x, unsigned int pickup) {
   
   out = 0.0;
   if (pickup < x->nPickups) { 
-    for (mode = 0; mode < x->activeModes; mode++) {
-      out += x->p0[mode] * x->gains[pickup][mode];
-    }
+    for (mode = 0; mode < x->activeModes; mode++)
+      if (x->freqs[mode] < SDT_sampleRate / 2) {
+        out += x->p0[mode] * x->gains[pickup][mode];
+      }
   }
   return out;
 }
@@ -344,7 +345,7 @@ void SDTResonator_setVelocity(SDTResonator *x, unsigned int pickup, double f) {
 
 void SDTResonator_setFrequency(SDTResonator *x, unsigned int mode, double f) {
   if (mode < x->nModes) {
-    x->freqs[mode] = SDT_fclip(f, 0.0, 0.5 * SDT_sampleRate);
+    x->freqs[mode] = (f >= 0)? f : -f;
   }
   updateMode(x, mode);
 }
