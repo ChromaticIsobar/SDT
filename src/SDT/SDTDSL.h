@@ -12,13 +12,9 @@ repetitions in the SDT code base
 Utility macros for other macros
 @{ */
 
-/** \cond */
-#ifndef __CONCAT
-#define __CONCAT(X, Y) X ## Y
-#endif
-#define _CONCAT(X, Y) __CONCAT(X, Y)
+#define _CCONCAT(X, Y) X ## Y
+#define _CONCAT(X, Y) _CCONCAT(X, Y)
 #define _STRINGIFY(X) #X
-/** \endcond */
 
 /** @brief Concatenate the expansions of two macros */
 #define CONCAT(X, Y) _CONCAT(X, Y)
@@ -31,7 +27,6 @@ Utility macros for other macros
 Utility macros for type conversions between C and JSON
 @{ */
 
-/** \cond */
 #define JSON_TYPE_int integer
 #define JSON_TYPE_long integer
 #define JSON_TYPE_unsigned_int integer
@@ -41,7 +36,6 @@ Utility macros for type conversions between C and JSON
 #define C_TYPE_long long
 #define C_TYPE_unsigned_int unsigned int
 #define C_TYPE_double double
-/** \endcond */
 
 /** @brief Get the JSON type from type name
 \param[in] TYPE The C type name (with underscores instead of spaces) */
@@ -98,7 +92,6 @@ P(T, AnotherProperty)
 \endcode
 @{ */
 
-/** \cond */
 #define SDT_TYPE_FULL(SDT_TYPE) CONCAT(SDT, SDT_TYPE)
 #define SDT_PROPERTY_FIELD(SDT_TYPE, PROPERTY) CONCAT(CONCAT(SDT_TYPE_FULL(SDT_TYPE), _), CONCAT(PROPERTY, _FIELD))
 #define SDT_PROPERTY_TYPE(SDT_TYPE, PROPERTY) CONCAT(CONCAT(SDT_TYPE_FULL(SDT_TYPE), _), CONCAT(PROPERTY, _TYPE))
@@ -107,7 +100,6 @@ P(T, AnotherProperty)
 #define SDT_FNAME(SDT_TYPE, PREFIX, PROPERTY) CONCAT(SDT_TYPE_FULL(SDT_TYPE), CONCAT(PREFIX, PROPERTY))
 #define SDT_GETTER_FNAME(SDT_TYPE, PROPERTY) SDT_FNAME(SDT_TYPE, _get, PROPERTY)
 #define SDT_SETTER_FNAME(SDT_TYPE, PROPERTY) SDT_FNAME(SDT_TYPE, _set, PROPERTY)
-/** \endcond */
 
 /** @brief Generate getter function declaration
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
