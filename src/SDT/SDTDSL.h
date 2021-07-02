@@ -49,7 +49,34 @@ Utility macros for type conversions between C and JSON
 /** @defgroup autodef Automatic Interface Definitions
 Macros for automatic generation of common functions on SDT types
 @{ */
+/** @defgroup autotypedef Automatic Type Definitions
+Macros for automatic generation of SDT type definitions and related functions
+@{ */
 
+#define SDT_TYPE_FULL(SDT_TYPE) CONCAT(SDT, SDT_TYPE)
+#define SDT_FNAME(SDT_TYPE, PREFIX, PROPERTY) CONCAT(SDT_TYPE_FULL(SDT_TYPE), CONCAT(PREFIX, PROPERTY))
+#define SDT_INIT_FNAME(SDT_TYPE) SDT_FNAME(SDT_TYPE, _new, )
+#define SDT_FREE_FNAME(SDT_TYPE) SDT_FNAME(SDT_TYPE, _free, )
+
+/** @brief Generate the type declaration
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_TYPEDEF_H(SDT_TYPE) typedef struct SDT_TYPE_FULL(SDT_TYPE) SDT_TYPE_FULL(SDT_TYPE);
+
+/** @brief Generate instantiation function declaration
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_INIT_H(SDT_TYPE) extern SDT_TYPE_FULL(SDT_TYPE) *SDT_INIT_FNAME(SDT_TYPE)( \
+  CONCAT(SDT_TYPE_FULL(SDT_TYPE), _SIGNATURE) \
+);
+
+/** @brief Generate destruction function declaration
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_FREE_H(SDT_TYPE) extern void SDT_FREE_FNAME(SDT_TYPE)(SDT_TYPE_FULL(SDT_TYPE) *x);
+
+/** @brief Generate type, initialization and destruction declarations
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_AUTOTYPE_H(SDT_TYPE) SDT_TYPEDEF_H(SDT_TYPE) SDT_INIT_H(SDT_TYPE) SDT_FREE_H(SDT_TYPE)
+
+/** @} */
 /** @defgroup accessors Accessors
 Macros for generating setter and getter functions.
 \par
@@ -92,14 +119,14 @@ P(T, AnotherProperty)
 \endcode
 @{ */
 
-#define SDT_TYPE_FULL(SDT_TYPE) CONCAT(SDT, SDT_TYPE)
 #define SDT_PROPERTY_FIELD(SDT_TYPE, PROPERTY) CONCAT(CONCAT(SDT_TYPE_FULL(SDT_TYPE), _), CONCAT(PROPERTY, _FIELD))
+#define SDT_PROPERTY_DEFAULT(SDT_TYPE, PROPERTY) CONCAT(CONCAT(SDT_TYPE_FULL(SDT_TYPE), _), CONCAT(PROPERTY, _DEFAULT))
 #define SDT_PROPERTY_TYPE(SDT_TYPE, PROPERTY) CONCAT(CONCAT(SDT_TYPE_FULL(SDT_TYPE), _), CONCAT(PROPERTY, _TYPE))
 #define SDT_PROPERTY_C_TYPE(SDT_TYPE, PROPERTY) C_TYPE(SDT_PROPERTY_TYPE(SDT_TYPE, PROPERTY))
 #define SDT_PROPERTY_JSON_TYPE(SDT_TYPE, PROPERTY) JSON_TYPE(SDT_PROPERTY_TYPE(SDT_TYPE, PROPERTY))
-#define SDT_FNAME(SDT_TYPE, PREFIX, PROPERTY) CONCAT(SDT_TYPE_FULL(SDT_TYPE), CONCAT(PREFIX, PROPERTY))
 #define SDT_GETTER_FNAME(SDT_TYPE, PROPERTY) SDT_FNAME(SDT_TYPE, _get, PROPERTY)
 #define SDT_SETTER_FNAME(SDT_TYPE, PROPERTY) SDT_FNAME(SDT_TYPE, _set, PROPERTY)
+#define SDT_PROPERTIES(SDT_TYPE) CONCAT(SDT_TYPE_FULL(SDT_TYPE), _PROPERTIES)
 
 /** @brief Generate getter function declaration
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
@@ -111,7 +138,7 @@ extern SDT_PROPERTY_C_TYPE(SDT_TYPE, PROPERTY) SDT_GETTER_FNAME(SDT_TYPE, PROPER
 
 /** @brief Generate getter function declarations for all properties
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
-#define SDT_GETTERS_H(SDT_TYPE) CONCAT(SDT_TYPE_FULL(SDT_TYPE), _PROPERTIES)(SDT_TYPE, SDT_GETTER_H)
+#define SDT_GETTERS_H(SDT_TYPE) SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_GETTER_H)
 
 /** @brief Generate getter function implementation
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
@@ -125,7 +152,7 @@ SDT_PROPERTY_C_TYPE(SDT_TYPE, PROPERTY) SDT_GETTER_FNAME(SDT_TYPE, PROPERTY)( \
 
 /** @brief Generate getter function implementations for all properties
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
-#define SDT_GETTERS(SDT_TYPE) CONCAT(SDT_TYPE_FULL(SDT_TYPE), _PROPERTIES)(SDT_TYPE, SDT_GETTER)
+#define SDT_GETTERS(SDT_TYPE) SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_GETTER)
 
 /** @brief Generate setter function declaration
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
@@ -138,7 +165,7 @@ extern void SDT_SETTER_FNAME(SDT_TYPE, PROPERTY)( \
 
 /** @brief Generate setter function declarations for all properties
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
-#define SDT_SETTERS_H(SDT_TYPE) CONCAT(SDT_TYPE_FULL(SDT_TYPE), _PROPERTIES)(SDT_TYPE, SDT_SETTER_H)
+#define SDT_SETTERS_H(SDT_TYPE) SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_SETTER_H)
 
 /** @brief Generate setter function implementation
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
@@ -153,7 +180,7 @@ void SDT_SETTER_FNAME(SDT_TYPE, PROPERTY)( \
 
 /** @brief Generate setter function implementations for all properties
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
-#define SDT_SETTERS(SDT_TYPE) CONCAT(SDT_TYPE_FULL(SDT_TYPE), _PROPERTIES)(SDT_TYPE, SDT_SETTER)
+#define SDT_SETTERS(SDT_TYPE) SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_SETTER)
 
 /** @brief Generate getter and setter function declarations
 \param[in] SDT_TYPE The SDT type name (without the SDT prefix)
@@ -174,6 +201,76 @@ void SDT_SETTER_FNAME(SDT_TYPE, PROPERTY)( \
 #define SDT_ACCESSORS(SDT_TYPE) SDT_GETTERS(SDT_TYPE) SDT_SETTERS(SDT_TYPE)
 
 /** @} */
+/** @defgroup autojson JSON De/serialization
+Macros for generating JSON serialization and deserialization functions.
+@{ */
+
+#define JSON_integer_FIELD integer
+#define JSON_double_FIELD dbl
+#define JSON_TYPE_FIELD(TYPE) CONCAT(CONCAT(JSON_, TYPE), _FIELD)
+
+#define SDT_JSON_PUSH(SDT_TYPE, PROPERTY) json_object_push( \
+  obj, STRINGIFY(SDT_PROPERTY_FIELD(SDT_TYPE, PROPERTY)), \
+  CONCAT(CONCAT(json_, SDT_PROPERTY_JSON_TYPE(SDT_TYPE, PROPERTY)), _new)( SDT_GETTER_FNAME(SDT_TYPE, PROPERTY)(x) ) \
+);
+
+#define SDT_JSON_PULL(SDT_TYPE, PROPERTY) \
+const json_value *CONCAT(v_, PROPERTY) = json_object_get_by_key(x, STRINGIFY(SDT_PROPERTY_FIELD(SDT_TYPE, PROPERTY))); \
+SDT_SETTER_FNAME(SDT_TYPE, PROPERTY)( y, \
+  (CONCAT(v_, PROPERTY) && (CONCAT(v_, PROPERTY)->type == CONCAT(json_, SDT_PROPERTY_JSON_TYPE(SDT_TYPE, PROPERTY))))? \
+  CONCAT(v_, PROPERTY)->u. JSON_TYPE_FIELD(SDT_PROPERTY_JSON_TYPE(SDT_TYPE, PROPERTY)) : \
+  SDT_PROPERTY_DEFAULT(SDT_TYPE, PROPERTY)
+);
+
+/** @brief Generate a JSON serialization function declaration
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_JSON_SERIALIZE_H(SDT_TYPE) extern json_value * CONCAT(SDT_TYPE_FULL(SDT_TYPE), _toJSON) ( \
+  const SDT_TYPE_FULL(SDT_TYPE) *x \
+);
+
+/** @brief Generate a JSON serialization function implementation
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix)*/
+#define SDT_JSON_SERIALIZE(SDT_TYPE) json_value * CONCAT(SDT_TYPE_FULL(SDT_TYPE), _toJSON) ( \
+  const SDT_TYPE_FULL(SDT_TYPE) *x \
+) { \
+  json_value *obj = json_object_new(0); \
+  SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_JSON_PUSH) \
+  return obj; \
+}
+
+/** @brief Generate a JSON deserialization function declaration
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix)*/
+#define SDT_JSON_DESERIALIZE_H(SDT_TYPE) \
+extern SDT_TYPE_FULL(SDT_TYPE) *CONCAT(SDT_TYPE_FULL(SDT_TYPE), _fromJSON)(const json_value *x);
+
+/** @brief Generate a JSON deserialization function implementation
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix)*/
+#define SDT_JSON_DESERIALIZE(SDT_TYPE) \
+SDT_TYPE_FULL(SDT_TYPE) *CONCAT(SDT_TYPE_FULL(SDT_TYPE), _fromJSON)(const json_value *x) { \
+  if (!x || x->type != json_object) \
+    return 0; \
+  SDT_PROPERTIES(SDT_TYPE)(SDT_TYPE, SDT_JSON_PULL) \
+  return y; \
+}
+
+/** @brief Generate function declarations for JSON de/serialization
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_AUTOJSON_H(SDT_TYPE) SDT_JSON_SERIALIZE_H(SDT_TYPE) SDT_JSON_DESERIALIZE_H(SDT_TYPE)
+
+/** @brief Generate function implementations for JSON de/serialization
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_AUTOJSON(SDT_TYPE) SDT_JSON_SERIALIZE(SDT_TYPE) SDT_JSON_DESERIALIZE(SDT_TYPE)
+
+/** @} */
+
+/** @brief Generate function declarations for type con/destructors, accessors and JSON de/serialization
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_AUTOAPI_H(SDT_TYPE) SDT_AUTOTYPE_H(SDT_TYPE) SDT_ACCESSORS_H(SDT_TYPE) SDT_AUTOJSON_H(SDT_TYPE)
+
+/** @brief Generate function implementations for accessors and JSON de/serialization
+\param[in] SDT_TYPE The SDT type name (without the SDT prefix) */
+#define SDT_AUTOAPI(SDT_TYPE) SDT_ACCESSORS(SDT_TYPE) SDT_AUTOJSON(SDT_TYPE)
+
 /** @} */
 /** @} */
 

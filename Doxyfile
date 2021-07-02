@@ -844,7 +844,8 @@ EXCLUDE_PATTERNS       =
 # exclude all test directories use the pattern */test/*
 
 EXCLUDE_SYMBOLS        = _* JSON_TYPE_* C_TYPE_*
-EXCLUDE_SYMBOLS       += SDT_*FNAME SDT_PROPERTY_* SDT_TYPE_FULL
+EXCLUDE_SYMBOLS       += SDT_*FNAME SDT_PROPERTY_* SDT_PROPERTIES SDT_TYPE_FULL
+EXCLUDE_SYMBOLS       += SDT*_*_* SDT*_PROPERTIES SDT*_SIGNATURE
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
